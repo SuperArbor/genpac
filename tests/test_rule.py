@@ -33,6 +33,7 @@ def _r(rule, j=None, d=None, p=None, jw=None, jr=None, dw=None, dr=None, pw=None
 _pars = [
     _r(''),
     _r('!google.com'),
+    _r('==cn.bing.com', j='cn.bing.com', dw='*cn.bing.com*'),
     _r('@@sina.com', d='sina.com', dw='*sina.com*'),
     _r('@@||163.com', d='163.com', dr='163\\.com'),
     _r('@@abc', dw='*abc*'),
