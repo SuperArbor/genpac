@@ -16,14 +16,14 @@ def test_run_by_config(cfg):
 
 @parametrize('argv', [
     skipif(is_not_own, reason='proxy')(
-        ['--format', 'dnsmasq', '--gfwlist-proxy', 'SOCKS5 127.0.0.1:9527', '-o/dev/null']),
+        ['--format', 'dnsmasq', '--gfwlist-proxy', 'SOCKS5 127.0.0.1:1080', '-o/dev/null']),
         '--format dnsmasq --gfwlist-disabled -o/dev/null',
         '--format dnsmasq --gfwlist-disabled -o-',
         '--format dnsmasq --gfwlist-url=- --gfwlist-local={} -o/dev/null'.format(join_etc('gfwlist.txt')),
         '--format dnsmasq -o/dev/null --user-rule-from=,,'
     ])
 def test_run_by_argv(argv, capsys):
-    with buildenv(argv=argv):
+    with buildenv(argv=argv.args[1], kwargs=argv.kwargs):
         run()
 
 

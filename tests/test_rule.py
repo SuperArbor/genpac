@@ -14,19 +14,21 @@ def _rs(r):
         return []
     return r if isinstance(r, list) else [r]
 
-def _r(rule, d=None, p=None, dw=None, dr=None, pw=None, pr=None):
+def _r(rule, j=None, d=None, p=None, jw=None, jr=None, dw=None, dr=None, pw=None, pr=None):
     def is_w2r(r):
         if r is None or r.startswith('^') or r.endswith('$'):
             return False
         return True
     _re_pre = '^[\\w\\-]+:\\/+(?!\\/)(?:[^\\/]+\\.)?'
+    if is_w2r(jr):
+        jr = _re_pre + jr
     if is_w2r(dr):
         dr = _re_pre + dr
     if is_w2r(pr):
         pr = _re_pre + pr
     return (rule,
-            [_rs(d), _rs(p)],
-            [_rs(dr), _rs(dw), _rs(pr), _rs(pw)])
+            [_rs(j), _rs(d), _rs(p)],
+            [_rs(jr), _rs(jw), _rs(dr), _rs(dw), _rs(pr), _rs(pw)])
 
 _pars = [
     _r(''),
@@ -62,21 +64,26 @@ _pars = [
 
 def merge():
     mr = []
-    mer = [[], []]
-    mepr = [[], [], [], []]
+    mer = [[], [], []]
+    mepr = [[], [], [], [], [], []]
     for r, er, epr in _pars:
         mr.append(r)
         mer[0].extend(er[0])
         mer[1].extend(er[1])
+        mer[2].extend(er[2])
         mepr[0].extend(epr[0])
         mepr[1].extend(epr[1])
         mepr[2].extend(epr[2])
         mepr[3].extend(epr[3])
+        mepr[4].extend(epr[4])
+        mepr[5].extend(epr[5])
     mer[0] = list(set(mer[0]))
     mer[1] = list(set(mer[1]))
-    mer[0] = [d for d in mer[0] if d not in mer[1]]
+    mer[2] = list(set(mer[2]))
+    mer[1] = [d for d in mer[1] if d not in mer[0] and d not in mer[2]]
     mer[0].sort()
     mer[1].sort()
+    mer[2].sort()
     return (mr, mer, mepr)
 
 _pars.append(merge())

@@ -17,8 +17,7 @@ _ETC_DIR = os.path.join(os.path.dirname(__file__), 'etc')
 _TMP_DIR = os.path.join(os.path.dirname(__file__), 'tmp')
 
 # 是否是自己的机子
-is_own = sys.platform.startswith('darwin') and \
-    ''.join(os.environ.values()).find('JinnLynn') >= 0
+is_own = sys.platform.lower().startswith('windows')
 is_not_own = not is_own
 
 def join_etc(*args):

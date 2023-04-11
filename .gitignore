@@ -2,6 +2,7 @@
 *.pyc
 __pycache__/
 tmp/
+.vscode/
 
 # 测试相关
 /.python-version

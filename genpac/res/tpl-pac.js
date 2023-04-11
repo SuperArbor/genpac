@@ -5,6 +5,7 @@
  * GFWList From: __GFWLIST_FROM__
  */
 
+var reject = '__REJECT__';
 var proxy = '__PROXY__';
 var rules = __RULES__;
 
@@ -23,8 +24,12 @@ function testHost(host, index) {
     for (var i = 0; i < rules[index].length; i++) {
         for (var j = 0; j < rules[index][i].length; j++) {
             lastRule = rules[index][i][j];
-            if (host == lastRule || host.endsWith('.' + lastRule))
-                return i % 2 == 0 ? 'DIRECT' : proxy;
+            if (i % 3 == 0 && (host == lastRule || host.endsWith('.' + lastRule)))
+                return reject;
+            if (i % 3 == 1 && (host == lastRule || host.endsWith('.' + lastRule)))
+                return 'DIRECT';
+            if (i % 3 == 2 && (host == lastRule || host.endsWith('.' + lastRule)))
+                return proxy;
         }
     }
     lastRule = '';
@@ -40,5 +45,5 @@ if (!String.prototype.endsWith) {
         position -= searchString.length;
         var lastIndex = subjectString.indexOf(searchString, position);
         return lastIndex !== -1 && lastIndex === position;
-  };
+  }
 }

@@ -10,7 +10,7 @@ from genpac.core import _GFWLIST_URL
 from tests.util import is_not_own
 from tests.util import parametrize, skipif, xfail
 
-_LOCAL_PROXY = ['SOCKS5 127.0.0.1:9527', 'PROXY 127.0.0.1:9580']
+_LOCAL_PROXY = ['SOCKS5 127.0.0.1:1080', 'PROXY 127.0.0.1:1081']
 
 # Generator使用类变量_gfwlists缓存gfwlist内容
 # 每次测试需手动清除

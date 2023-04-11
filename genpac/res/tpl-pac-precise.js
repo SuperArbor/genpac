@@ -5,6 +5,7 @@
  * GFWList From: __GFWLIST_FROM__
  */
 
+var reject = '__REJECT__';
 var proxy = '__PROXY__';
 var rules = __RULES__;
 
@@ -23,13 +24,16 @@ function testURL(url, index) {
     for (var i = 0; i < rules[index].length; i++) {
         for (var j = 0; j < rules[index][i].length; j++) {
             lastRule = rules[index][i][j];
-            if ( (i % 2 == 0 && regExpMatch(url, lastRule))
-                || (i % 2 != 0 && shExpMatch(url, lastRule)))
-                return (i <= 1) ? 'DIRECT' : proxy;
+            if (i % 3 == 0 && regExpMatch(url, lastRule))
+                return reject;
+            if (i % 3 == 1 && regExpMatch(url, lastRule))
+                return 'DIRECT';
+            if (i % 3 == 2 && shExpMatch(url, lastRule))
+                return proxy;
         }
     }
     lastRule = '';
-};
+}
 
 function regExpMatch(url, pattern) {
     try {

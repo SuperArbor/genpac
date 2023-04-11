@@ -117,8 +117,11 @@ class FmtPAC(FmtBase):
             description='通过代理自动配置文件（PAC）系统或浏览器可自动选择合适的'
                         '代理服务器')
         group.add_argument(
+            '--pac-reject', metavar='REJECT',
+            help='拒绝连接的地址, 如 SOCKS5 127.0.0.1:65535; SOCKS 127.0.0.1:65535')
+        group.add_argument(
             '--pac-proxy', metavar='PROXY',
-            help='代理地址, 如 SOCKS5 127.0.0.1:8080; SOCKS 127.0.0.1:8080')
+            help='代理地址, 如 SOCKS5 127.0.0.1:1080; SOCKS 127.0.0.1:1080')
         group.add_argument(
             '--pac-precise', action='store_true',
             help='精确匹配模式')
@@ -126,28 +129,19 @@ class FmtPAC(FmtBase):
             '--pac-compress', action='store_true',
             help='压缩输出')
 
-        # 弃用的参数
-        group.add_argument(
-            '-p', '--proxy', dest='pac_proxy', metavar='PROXY',
-            help='已弃用参数, 等同于--pac-proxy, 后续版本将删除, 避免使用')
-        group.add_argument(
-            '-P', '--precise', action='store_true',
-            dest='pac_precise',
-            help='已弃用参数, 等同于--pac-precise, 后续版本将删除, 避免使用')
-        group.add_argument(
-            '-z', '--compress', action='store_true',
-            dest='pac_compress',
-            help='已弃用参数, 等同于--pac-compress, 后续版本将删除, 避免使用')
-
     @classmethod
     def config(cls, options):
         options['pac-proxy'] = {'replaced': 'proxy'}
+        options['pac-reject'] = {'replaced': 'reject'}
         options['pac-compress'] = {'conv': conv_bool, 'replaced': 'compress'}
         options['pac-precise'] = {'conv': conv_bool, 'replaced': 'precise'}
 
     def pre_generate(self):
         if not self.options.pac_proxy:
             self.error('代理信息不存在，检查参数--pac-proxy或配置pac-proxy')
+            return False
+        if not self.options.pac_reject:
+            self.error('拒绝连接信息不存在，检查参数--pac-rejedt或配置pac-reject')
             return False
         return super(FmtPAC, self).pre_generate()
 
@@ -156,8 +150,10 @@ class FmtPAC(FmtBase):
             self.precise_rules if self.options.pac_precise else self.rules,
             indent=None if self.options.pac_compress else 4,
             separators=(',', ':') if self.options.pac_compress else None)
-        replacements.update({'__PROXY__': self.options.pac_proxy,
-                             '__RULES__': rules})
+        replacements.update({
+            '__REJECT__': self.options.pac_reject,
+            '__PROXY__': self.options.pac_proxy,
+            '__RULES__': rules})
         return self.replace(self.tpl, replacements)
 
 

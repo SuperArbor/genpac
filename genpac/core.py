@@ -316,7 +316,7 @@ class Generator(object):
         content = self.formater.generate(replacements)
 
         output = self.options.output
-        if not output or output == '-':
+        if not output or output == '-' or not os.path.exists(os.path.dirname()):
             sys.stdout.write(content)
         else:
             write_file(output, content, fail_msg='写入输出文件`{path}`失败')
@@ -326,7 +326,7 @@ class Generator(object):
     def init_opener(self):
         if not self.options.gfwlist_proxy:
             return build_opener()
-        _PROXY_TYPES['SOCKS'] = _PROXY_TYPES['SOCKS4']
+        _PROXY_TYPES['SOCKS'] = _PROXY_TYPES['SOCKS5']
         _PROXY_TYPES['PROXY'] = _PROXY_TYPES['HTTP']
         try:
             # format: PROXY|SOCKS|SOCKS4|SOCKS5 [USR:PWD]@HOST:PORT
@@ -443,7 +443,7 @@ class Generator(object):
 # return: [忽略的域名, 被墙的域名]
 #
 # precise = True 时 返回 具体网址信息
-# return: [忽略规则_正则表达式, 忽略规则_通配符, 被墙规则_正则表达式, 被墙规则_通配符]
+# return: [拒绝规则_正则表达式, 拒绝规则_通配符, 忽略规则_正则表达式, 忽略规则_通配符, 被墙规则_正则表达式, 被墙规则_通配符]
 def parse_rules(rules, precise=False):
     return _parse_rule_precise(rules) if precise else _parse_rule(rules)
 
@@ -466,6 +466,7 @@ def run():
 
 # 普通解析
 def _parse_rule(rules):
+    reject_list = []
     direct_lst = []
     proxy_lst = []
     for line in rules:
@@ -473,8 +474,14 @@ def _parse_rule(rules):
 
         if not line or line.startswith('!'):
             continue
-
-        if line.startswith('@@'):
+        
+        if line.startswith('=='):
+            line = line.lstrip('=|.')
+            domain = surmise_domain(line)
+            if domain:
+                reject_list.append(domain)
+            continue
+        elif line.startswith('@@'):
             line = line.lstrip('@|.')
             domain = surmise_domain(line)
             if domain:
@@ -504,15 +511,17 @@ def _parse_rule(rules):
         if domain:
             proxy_lst.append(domain)
 
+    reject_list = list(set(reject_list))
     proxy_lst = list(set(proxy_lst))
     direct_lst = list(set(direct_lst))
 
-    direct_lst = [d for d in direct_lst if d not in proxy_lst]
+    direct_lst = [d for d in direct_lst if d not in proxy_lst and d not in reject_list]
 
+    reject_list.sort()
     proxy_lst.sort()
     direct_lst.sort()
 
-    return [direct_lst, proxy_lst]
+    return [reject_list, direct_lst, proxy_lst]
 
 
 # 精确解析
@@ -522,21 +531,24 @@ def _parse_rule_precise(rules):
                          pattern)
         # pattern = re.sub(r'\*+', r'*', pattern)
         pattern = re.sub(r'\*', r'.*', pattern)
-        pattern = re.sub(r'\？', r'.', pattern)
+        pattern = re.sub(r'\?', r'.', pattern)
         return pattern
-    # d=direct p=proxy w=wildchar r=regexp
-    result = {'d': {'w': [], 'r': []}, 'p': {'w': [], 'r': []}}
+    # j=reject d=direct p=proxy w=wildchar r=regexp
+    result = {'j': {'w': [], 'r': []}, 'd': {'w': [], 'r': []}, 'p': {'w': [], 'r': []}}
     for line in rules:
         line = line.strip()
         # comment
         if not line or line.startswith('!'):
             continue
-        d_or_p = 'p'
+        j_d_p = 'p'
         w_or_r = 'r'
         # exception rules
-        if line.startswith('@@'):
+        if line.startswith('=='):
             line = line[2:]
-            d_or_p = 'd'
+            j_d_p = 'j'
+        elif line.startswith('@@'):
+            line = line[2:]
+            j_d_p = 'd'
         # regular expressions
         if line.startswith('/') and line.endswith('/'):
             line = line[1:-1]
@@ -563,7 +575,9 @@ def _parse_rule_precise(rules):
             w_or_r = 'w'
         if w_or_r == 'w':
             line = '*{}*'.format(line.strip('*'))
-        result[d_or_p][w_or_r].append(line)
+        result[j_d_p][w_or_r].append(line)
 
-    return [result['d']['r'], result['d']['w'],
-            result['p']['r'], result['p']['w']]
+    return [
+        result['j']['r'], result['j']['w'],
+        result['d']['r'], result['d']['w'],
+        result['p']['r'], result['p']['w']]

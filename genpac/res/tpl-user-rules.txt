@@ -1,6 +1,8 @@
 ! 用户规则自定义文件
 ! 参考: https://github.com/JinnLynn/genpac/blob/master/sample/user-rules.txt     
 
+==cn.bing.com
+
 @@sina.com
 @@163.com
 
